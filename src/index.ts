@@ -2,21 +2,27 @@ import inquirer from "inquirer";
 import chalk from "chalk";
 import path from "path";
 import fs from "fs-extra";
-import { frameworks } from "./frameworks";
-import { generatePackageJson } from "./utils/generatePackageJson";
-import { installDependencies } from "./utils/installDependencies";
-import { copyTemplate } from "./utils/copyTemplate";
+import { execa } from "execa";
+import { frameworks } from "./Frameworks";
+import {
+  copyTemplate,
+  installDependencies,
+  generatePackageJson,
+} from "./Utils";
+
+type FrameworkKey = keyof typeof frameworks;
 
 async function main() {
   console.log(chalk.blue("Welcome to XtrixUI CLI! 🚀"));
 
-  // Prompt for framework selection
   const frameworkChoices = Object.entries(frameworks).map(([key, value]) => ({
     name: value.name,
     value: key,
   }));
 
-  const { frameworkKey } = await inquirer.prompt([
+  const { frameworkKey } = await inquirer.prompt<{
+    frameworkKey: FrameworkKey;
+  }>([
     {
       type: "list",
       name: "frameworkKey",
@@ -25,7 +31,6 @@ async function main() {
     },
   ]);
 
-  // Prompt for project name
   const { projectName } = await inquirer.prompt([
     {
       type: "input",
@@ -35,7 +40,6 @@ async function main() {
     },
   ]);
 
-  // Prompt for package manager
   const { packageManager } = await inquirer.prompt([
     {
       type: "list",
@@ -51,13 +55,10 @@ async function main() {
   try {
     console.log(chalk.green("Creating project..."));
 
-    // Create project folder
     await fs.ensureDir(targetPath);
 
-    // Copy template files
     await copyTemplate(frameworkConfig.templatePath, targetPath);
 
-    // Generate package.json
     console.log(chalk.green("Generating package.json..."));
     const packageJson = generatePackageJson(projectName, frameworkConfig);
     await fs.writeFile(
@@ -65,13 +66,11 @@ async function main() {
       JSON.stringify(packageJson, null, 2),
     );
 
-    // Install dependencies
     console.log(
       chalk.green(`Installing dependencies using ${packageManager}...`),
     );
     await installDependencies(packageManager, targetPath);
 
-    // Initialize Git
     console.log(chalk.green("Initializing Git repository..."));
     await execa("git", ["init"], { cwd: targetPath });
     await execa("git", ["add", "."], { cwd: targetPath });
