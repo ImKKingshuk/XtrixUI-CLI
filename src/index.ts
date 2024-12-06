@@ -1,106 +1,96 @@
-import { execa } from 'execa';
-import fs from 'fs';
-import path from 'path';
-import chalk from 'chalk';
-import prompts from 'prompts';
-import { log, copyTemplateFiles } from './Helpers/Utils';
-// Function to initialize Git and make the initial commit
-async function initializeGit(projectPath: string) {
-  try {
-    await execa('git', ['init'], { cwd: projectPath });
-    console.log(chalk.green('◇ Initialized a Git repository'));
+import inquirer from "inquirer";
+import chalk from "chalk";
+import path from "path";
+import fs from "fs-extra";
+import { frameworks } from "./frameworks";
+import { generatePackageJson } from "./utils/generatePackageJson";
+import { installDependencies } from "./utils/installDependencies";
+import { copyTemplate } from "./utils/copyTemplate";
 
-    await execa('git', ['add', '.'], { cwd: projectPath });
-    await execa('git', ['commit', '-m', 'Initial commit from xtrixui'], {
-      cwd: projectPath,
-    });
-    console.log(chalk.green('◇ Created an initial commit'));
-  } catch (err) {
-    if (err instanceof Error) {
-      console.error(chalk.red(`Failed to initialize Git: ${err.message}`));
-    } else {
-      console.error(chalk.red(`An unknown error occurred: ${String(err)}`));
-    }
-  }
-}
-
-// Main CLI function
 async function main() {
-  const response = await prompts([
+  console.log(chalk.blue("Welcome to XtrixUI CLI! 🚀"));
+
+  // Prompt for framework selection
+  const frameworkChoices = Object.entries(frameworks).map(([key, value]) => ({
+    name: value.name,
+    value: key,
+  }));
+
+  const { frameworkKey } = await inquirer.prompt([
     {
-      type: 'text',
-      name: 'projectName',
-      message: '◇ Your Project Name:',
-      initial: 'my-XtrixUI-app',
-    },
-    {
-      type: 'select',
-      name: 'framework',
-      message: '◇ Select Framework:',
-      choices: [
-        { title: 'NextJS (App Router)', value: 'nextjs-app' },
-        { title: 'NextJS (Pages Router)', value: 'nextjs-pages' },
-        { title: 'Vite (React + SWC)', value: 'vite' },
-        { title: 'Remix', value: 'remix' },
-        { title: 'Laravel', value: 'laravel' },
-        { title: 'Ruby on Rails', value: 'rails' },
-        { title: 'RedwoodJS', value: 'redwood' },
-        { title: 'Astro', value: 'astro' },
-        { title: 'Qwik', value: 'qwik' },
-        { title: 'SolidJS', value: 'solid' },
-        { title: 'Gatsby', value: 'gatsby' },
-        { title: 'React', value: 'react' },
-      ],
-    },
-    {
-      type: 'select',
-      name: 'packageManager',
-      message: '◇ Select a package manager:',
-      choices: [
-        { title: 'bun', value: 'bun' },
-        { title: 'pnpm', value: 'pnpm' },
-        { title: 'yarn', value: 'yarn' },
-        { title: 'npm', value: 'npm' },
-      ],
+      type: "list",
+      name: "frameworkKey",
+      message: "Select a framework:",
+      choices: frameworkChoices,
     },
   ]);
 
-  const { projectName, framework, packageManager } = response;
-  const targetDir = path.resolve(process.cwd(), projectName);
-  const templateDir = path.resolve(__dirname, 'templates', framework);
+  // Prompt for project name
+  const { projectName } = await inquirer.prompt([
+    {
+      type: "input",
+      name: "projectName",
+      message: "Your project name:",
+      default: "my-xtrixui-app",
+    },
+  ]);
 
-  // Copy project template
-  fs.mkdirSync(targetDir, { recursive: true });
-  copyTemplateFiles(templateDir, targetDir);
-  log('◇ Project files copied!');
+  // Prompt for package manager
+  const { packageManager } = await inquirer.prompt([
+    {
+      type: "list",
+      name: "packageManager",
+      message: "Select a package manager:",
+      choices: ["npm", "yarn", "pnpm", "bun"],
+    },
+  ]);
 
-  // Initialize Git and make the initial commit
-  await initializeGit(targetDir);
+  const frameworkConfig = frameworks[frameworkKey];
+  const targetPath = path.resolve(process.cwd(), projectName);
 
-  // Install dependencies
   try {
-    await execa(packageManager, ['install'], {
-      cwd: targetDir,
-      stdio: 'inherit',
-    });
-    log('◇ Dependencies installed!');
-  } catch (err) {
-    console.error(chalk.red(`Failed to install dependencies: ${err}`));
-  }
+    console.log(chalk.green("Creating project..."));
 
-  // Output next steps
-  console.log(`
-◇ Project created successfully!
-◇ Next steps ───────╮
-│                    │
-│  cd ${projectName} │
-│  ${packageManager} dev │
-│                    │
-├────────────────────╯
-└  🚀 3 2 1, GO!
-`);
+    // Create project folder
+    await fs.ensureDir(targetPath);
+
+    // Copy template files
+    await copyTemplate(frameworkConfig.templatePath, targetPath);
+
+    // Generate package.json
+    console.log(chalk.green("Generating package.json..."));
+    const packageJson = generatePackageJson(projectName, frameworkConfig);
+    await fs.writeFile(
+      path.join(targetPath, "package.json"),
+      JSON.stringify(packageJson, null, 2),
+    );
+
+    // Install dependencies
+    console.log(
+      chalk.green(`Installing dependencies using ${packageManager}...`),
+    );
+    await installDependencies(packageManager, targetPath);
+
+    // Initialize Git
+    console.log(chalk.green("Initializing Git repository..."));
+    await execa("git", ["init"], { cwd: targetPath });
+    await execa("git", ["add", "."], { cwd: targetPath });
+    await execa("git", ["commit", "-m", "Initial commit from XtrixUI CLI"], {
+      cwd: targetPath,
+    });
+
+    console.log(chalk.blue("🎉 Project created successfully!"));
+    console.log(
+      chalk.blue(
+        `Next steps:\n\n  cd ${projectName}\n  ${packageManager} dev\n`,
+      ),
+    );
+  } catch (error) {
+    console.error(
+      chalk.red("An error occurred during project creation:", error),
+    );
+    process.exit(1);
+  }
 }
 
-main().catch((err) => {
-  console.error(chalk.red(`Error: ${err.message}`));
-});
+main();
