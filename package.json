@@ -20,7 +20,7 @@
     "bin",
     "dist",
     "src",
-    "Templates"
+    "templates"
   ],
   "scripts": {
     "build": "rslib build",
