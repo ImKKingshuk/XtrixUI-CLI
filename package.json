@@ -17,8 +17,10 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
+    "bin",
     "dist",
-    "bin"
+    "src",
+    "templates"
   ],
   "scripts": {
     "build": "rslib build",

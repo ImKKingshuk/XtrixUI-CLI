@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import("../src/index.js").catch((err) => {
-  console.error("Failed to execute CLI:", err);
+
+import("../dist/index.js").catch((err) => {
+  console.error("Failed to execute CLI:", err.message);
   process.exit(1);
 });
