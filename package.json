@@ -2,6 +2,10 @@
   "name": "xtrixui-cli",
   "version": "1.0.0",
   "type": "module",
+  "description": "A CLI tool for scaffolding XtrixUI projects with ease.",
+  "bin": {
+    "xtrixui": "./bin/xtrixui.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -13,11 +17,13 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "bin"
   ],
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
+    "start": "node ./bin/xtrixui.js",
     "format": "prettier --write .",
     "lint": "eslint .",
     "test": "vitest run"
