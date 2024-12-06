@@ -1,7 +1,7 @@
 export const frameworks = {
   "next-app-js": {
     name: "Next.js (App Router + JavaScript)",
-    templatePath: "templates/next/app-router-js",
+    templatePath: "Templates/nextjs-app-js",
     scripts: {
       dev: "next dev --turbopack",
       build: "next build",
@@ -22,7 +22,7 @@ export const frameworks = {
   },
   "next-app-ts": {
     name: "Next.js (App Router + TypeScript)",
-    templatePath: "templates/next/app-router-ts",
+    templatePath: "Templates/nextjs-app-ts",
     scripts: {
       dev: "next dev --turbopack",
       build: "next build",
