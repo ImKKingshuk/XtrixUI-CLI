@@ -4,7 +4,7 @@
   "type": "module",
   "description": "A CLI tool for scaffolding XtrixUI projects with ease.",
   "bin": {
-    "xtrixui": "./bin/xtrixui.js"
+    "xtrixui-cli": "./bin/xtrixui.js"
   },
   "exports": {
     ".": {
