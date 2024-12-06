@@ -3,8 +3,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 /**
- * Copies template files from a given source path to a target path.
- * Resolves paths correctly and ensures proper error handling.
  *
  * @param templatePath - The relative path to the template directory.
  * @param targetPath - The path where the project should be created.
@@ -26,7 +24,14 @@ export async function copyTemplate(templatePath: string, targetPath: string) {
     }
 
     await fs.copy(resolvedTemplatePath, targetPath);
-    console.log("Template files copied successfully!");
+
+    const gitignorePath = path.join(targetPath, "gitignore");
+    const dotGitignorePath = path.join(targetPath, ".gitignore");
+    if (await fs.pathExists(gitignorePath)) {
+      await fs.rename(gitignorePath, dotGitignorePath);
+    }
+
+    console.log("Template files copied successfully, including .gitignore!");
   } catch (err) {
     if (err instanceof Error) {
       console.error("Failed to copy template files:", err.message);
