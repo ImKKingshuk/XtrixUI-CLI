@@ -1,6 +1,6 @@
 {
   "name": "xtrixui-cli",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "type": "module",
   "description": "A CLI tool for scaffolding XtrixUI projects with ease.",
   "bin": {
