@@ -2,6 +2,7 @@
 
 import inquirer from "inquirer";
 import chalk from "chalk";
+import figlet from "figlet";
 import path from "path";
 import fs from "fs-extra";
 import { execa } from "execa";
@@ -14,8 +15,21 @@ import {
 
 type FrameworkKey = keyof typeof frameworks;
 
+function showBanner() {
+  console.log(
+    chalk.cyan(
+      figlet.textSync("XtrixUI", {
+        font: "Standard",
+        horizontalLayout: "full",
+        verticalLayout: "default",
+      }),
+    ),
+  );
+  console.log(chalk.magentaBright("🚀 Welcome to XtrixUI CLI! 🚀\n"));
+}
+
 async function main() {
-  console.log(chalk.blue("Welcome to XtrixUI CLI! 🚀"));
+  showBanner();
 
   const frameworkChoices = Object.entries(frameworks).map(([key, value]) => ({
     name: value.name,
@@ -55,13 +69,12 @@ async function main() {
   const targetPath = path.resolve(process.cwd(), projectName);
 
   try {
-    console.log(chalk.green("Creating project..."));
+    console.log(chalk.green("🛠️  Creating project..."));
 
     await fs.ensureDir(targetPath);
-
     await copyTemplate(frameworkConfig.templatePath, targetPath);
 
-    console.log(chalk.green("Generating package.json..."));
+    console.log(chalk.green("📦 Generating package.json..."));
     const packageJson = generatePackageJson(projectName, frameworkConfig);
     await fs.writeFile(
       path.join(targetPath, "package.json"),
@@ -69,26 +82,27 @@ async function main() {
     );
 
     console.log(
-      chalk.green(`Installing dependencies using ${packageManager}...`),
+      chalk.green(`📥 Installing dependencies using ${packageManager}...`),
     );
     await installDependencies(packageManager, targetPath);
 
-    console.log(chalk.green("Initializing Git repository..."));
+    console.log(chalk.green("🔧 Initializing Git repository..."));
     await execa("git", ["init"], { cwd: targetPath });
     await execa("git", ["add", "."], { cwd: targetPath });
     await execa("git", ["commit", "-m", "Initial commit from XtrixUI CLI"], {
       cwd: targetPath,
     });
 
-    console.log(chalk.blue("🎉 Project created successfully!"));
+    console.log(chalk.blueBright("🎉 Project created successfully!"));
     console.log(
-      chalk.blue(
-        `Next steps:\n\n  cd ${projectName}\n  ${packageManager} dev\n`,
+      chalk.blueBright(
+        `\nNext steps:\n\n  cd ${projectName}\n  ${packageManager} dev\n`,
       ),
     );
   } catch (error) {
     console.error(
-      chalk.red("An error occurred during project creation:", error),
+      chalk.red("❌ An error occurred during project creation:"),
+      error,
     );
     process.exit(1);
   }
